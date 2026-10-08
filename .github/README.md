@@ -26,6 +26,28 @@ re-write is found at
 
 ## 🎈 Setup
 
+<details open>
+  <summary>📦 vim.pack (Recommended)</summary>
+
+Requires Neovim 0.12 or newer. Add this to your `init.lua` using Neovim's
+[built-in package manager](https://neovim.io/doc/user/pack/#vim.pack):
+
+```lua
+vim.pack.add {
+  { src = "https://github.com/f-ras/codam-header.nvim" },
+}
+
+require("codamheader").setup {
+  default_map = true, -- Default mapping <F1> in normal mode.
+  auto_update = true, -- Update header when saving.
+  user = "username", -- Your user.
+  mail = "your@email.com", -- Your mail.
+  -- Add other options here.
+}
+```
+
+</details>
+
 <details>
   <summary>📦 Packer.nvim</summary>
 
@@ -48,7 +70,7 @@ use {
 </details>
 
 <details>
-  <summary>💤 Lazy.nvim</summary>
+  <summary>💤 Lazy.nvim (lame)</summary>
 
 Create a file 'codam-header.lua' in ~/.config/nvim/plugins/ with the following
 content:
