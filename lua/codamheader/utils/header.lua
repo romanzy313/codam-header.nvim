@@ -8,19 +8,6 @@
 
 local M = {}
 local config = require "codamheader.config"
-local git = require "codamheader.utils.git"
-
----Get username.
----@return string|nil
-function M.user()
-    return vim.g.user or (config.opts.git.enabled and git.user()) or config.opts.user
-end
-
----Get email.
----@return string|nil
-function M.email()
-    return vim.g.mail or (config.opts.git.enabled and git.email()) or config.opts.mail
-end
 
 ---Get left and right comment symbols from the buffer.
 ---@return string, string
@@ -104,7 +91,7 @@ end
 
 local function update_fields(header)
     header[4] = replace_text(header[4], vim.fn.expand "%:t")
-    header[9] = replace_text(header[9], "Updated: " .. os.date "%Y/%m/%d %H:%M:%S" .. " by " .. M.user())
+    header[9] = replace_text(header[9], "Updated: " .. os.date "%Y/%m/%d %H:%M:%S" .. " by " .. config.opts.user)
     return header
 end
 
@@ -126,9 +113,9 @@ function M.gen_header()
 
     local text = {
         [2] = vim.fn.expand "%:t",
-        [4] = "By: " .. M.user() .. " <" .. M.email() .. ">",
-        [6] = "Created: " .. date .. " by " .. M.user(),
-        [7] = "Updated: " .. date .. " by " .. M.user(),
+        [4] = "By: " .. config.opts.user .. " <" .. config.opts.mail .. ">",
+        [6] = "Created: " .. date .. " by " .. config.opts.user,
+        [7] = "Updated: " .. date .. " by " .. config.opts.user,
     }
     local header = { fill_line, empty_line }
     for i = 1, math.max(7, #ascii) do

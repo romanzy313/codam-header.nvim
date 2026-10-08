@@ -23,7 +23,6 @@ re-write is found at
 - Command: `Stdheader`
 - Auto update on save (optional)
 - Supports `commentstring`
-- Supports Git
 
 ## 🎈 Setup
 
@@ -86,23 +85,12 @@ return {
   default_map = true,
   ---Enable auto-update of headers.
   auto_update = true,
-  ---Default user.name.
+  ---Header author.
   user = "username",
-  ---Default user.email.
+  ---Header email.
   mail = "your@mail.com",
   ---ASCII art: single design, or an array of designs.
   --asciiart = { "---", "---", ... },
-  ---Git config.
-  git = {
-    ---Enable Git support.
-    enabled = false,
-    ---PATH to the Git binary.
-    bin = "git",
-    ---Use global user.name, otherwise use local user.name.
-    user_global = true,
-    ---Use global user.email, otherwise use local user.email.
-    email_global = true,
-  },
 }
 ```
 
@@ -190,15 +178,3 @@ asciiart = {
     },
 }
 ```
-
-## 🌐 User and Mail
-
-`user` and `mail` can be defined using global variables.
-
-```lua
-vim.g.user = "username"
-vim.g.mail = "your@mail.com"
-```
-
-> **_NOTE:_** The order of priority: `global variables` >
-> `git config (if support enabled)` > `user config`.

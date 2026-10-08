@@ -8,6 +8,11 @@ local designs = {
     { "ART TWO", "TWO", "CCC", "OTHER AUTHOR ART", "DDD", "OTHER CREATED ART", "OTHER UPDATED ART" },
 }
 
+-- Conflicting editor globals must not override setup options.
+local global_user, global_mail = vim.g.user, vim.g.mail
+vim.g.user = "global-user"
+vim.g.mail = "global@example.com"
+
 require("codamheader").setup {
     default_map = false,
     user = "tester",
@@ -51,6 +56,8 @@ for index, art in ipairs(designs) do
     vim.cmd "Stdheader"
     local before = vim.api.nvim_buf_get_lines(0, 0, 11, false)
     check_art(before, art)
+    assert(before[6]:find("By: " .. config.opts.user .. " <tester@example.com>", 1, true))
+    assert(before[8]:find("by " .. config.opts.user, 1, true))
     assert(calls == index)
 
     config.set { asciiart = { { "REMOVED", "", "", "", "", "", "" } }, user = "newuser" }
@@ -194,5 +201,6 @@ assert(selections == 1)
 assert(vim.api.nvim_buf_line_count(0) == 38)
 math.random = random
 
+vim.g.user, vim.g.mail = global_user, global_mail
 os.date = date
 print "Passed: unlimited artwork height, preservation, random selection, Unicode, metadata updates, and buffer options"

@@ -18,12 +18,6 @@ M.opts = {
             "########   odam.nl       ",
         },
     },
-    git = {
-        enabled = false,
-        bin = "git",
-        user_global = true,
-        email_global = true,
-    },
 }
 
 ---Applies the user options to the default table.
