@@ -1,6 +1,8 @@
 <h1 align="center">Codam Header for Neovim</h1>
 
-This extension provides the Codam header integration in Neovim. The original 42 re-write is found at [42-header.nvim](https://github.com/Diogo-ss/42-header.nvim).
+This extension provides the Codam header integration in Neovim. The original 42
+re-write is found at
+[42-header.nvim](https://github.com/Diogo-ss/42-header.nvim).
 
 ```bash
 # ************************************************************************** #
@@ -49,7 +51,8 @@ use {
 <details>
   <summary>💤 Lazy.nvim</summary>
 
-Create a file 'codam-header.lua' in ~/.config/nvim/plugins/ with the following content:
+Create a file 'codam-header.lua' in ~/.config/nvim/plugins/ with the following
+content:
 
 ```lua
 return {
@@ -107,8 +110,24 @@ To choose randomly when inserting a new header, supply multiple designs:
 
 ```lua
 asciiart = {
-  { "   /\\_/\\   ", "  ( o.o )  ", "   > ^ <   ", "           ", "           ", "           ", "           " },
-  { "   .---.   ", "  ( o o )  ", "   | O |   ", "   '---'   ", "           ", "           ", "           " },
+  {
+      "   /\\_/\\   ",
+      "  ( o.o )  ",
+      "   > ^ <   ",
+      "           ",
+      "           ",
+      "           ",
+      "           "
+  },
+  {
+      "   .---.   ",
+      "  ( o o )  ",
+      "   | O |   ",
+      "   '---'   ",
+      "           ",
+      "           ",
+      "           "
+  },
 }
 ```
 
@@ -121,4 +140,5 @@ vim.g.user = "username"
 vim.g.mail = "your@mail.com"
 ```
 
-> **_NOTE:_** The order of priority: `global variables` > `git config (if support enabled)` > `user config`.
+> **_NOTE:_** The order of priority: `global variables` >
+> `git config (if support enabled)` > `user config`.

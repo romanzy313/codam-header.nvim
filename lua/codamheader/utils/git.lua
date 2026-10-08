@@ -14,27 +14,27 @@ local M = {}
 ---@param ... table: Arguments.
 ---@return string|nil: Output of command, or nil if the command fails or returns an empty output.
 function M.cmd(...)
-  local output = vim.trim(vim.fn.system { config.opts.git.bin, unpack(...) })
+    local output = vim.trim(vim.fn.system { config.opts.git.bin, unpack(...) })
 
-  if vim.v.shell_error ~= 0 or output == "" then
-    return nil
-  end
+    if vim.v.shell_error ~= 0 or output == "" then
+        return nil
+    end
 
-  return output
+    return output
 end
 
 ---Get user.name.
 ---@return string|nil
 function M.user()
-  local flag = config.opts.git.user_global and "--global" or "--local"
-  return M.cmd { "config", flag, "--includes", "user.name" }
+    local flag = config.opts.git.user_global and "--global" or "--local"
+    return M.cmd { "config", flag, "--includes", "user.name" }
 end
 
 ---Get user.email.
 ---@return string|nil
 function M.email()
-  local flag = config.opts.git.user_global and "--global" or "--local"
-  return M.cmd { "config", flag, "--includes", "user.email" }
+    local flag = config.opts.git.user_global and "--global" or "--local"
+    return M.cmd { "config", flag, "--includes", "user.email" }
 end
 
 return M
