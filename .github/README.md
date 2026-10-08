@@ -87,7 +87,7 @@ return {
   user = "username",
   ---Default user.email.
   mail = "your@mail.com",
-  ---ASCII art.
+  ---ASCII art: seven lines, or an array of seven-line designs.
   --asciiart = { "---", "---", ... },
   ---Git config.
   git = {
@@ -100,6 +100,15 @@ return {
     ---Use global user.email, otherwise use local user.email.
     email_global = true,
   },
+}
+```
+
+To choose randomly when inserting a new header, supply multiple designs:
+
+```lua
+asciiart = {
+  { "   /\\_/\\   ", "  ( o.o )  ", "   > ^ <   ", "           ", "           ", "           ", "           " },
+  { "   .---.   ", "  ( o o )  ", "   | O |   ", "   '---'   ", "           ", "           ", "           " },
 }
 ```
 

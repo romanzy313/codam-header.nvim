@@ -52,7 +52,8 @@ end
 function M.gen_line(text, ascii)
   local max_length = config.opts.length - config.opts.margin * 2 - #ascii
 
-  text = (text):sub(1, max_length)
+  -- Keep a separator so text can be updated without knowing the artwork.
+  text = (text):sub(1, ascii ~= "" and max_length - 2 or max_length)
 
   local left, right = M.comment_symbols()
   local left_margin = (" "):rep(config.opts.margin - #left)
@@ -65,11 +66,34 @@ end
 ---Generate a complete header.
 ---@return table: A table ontaining all lines of header.
 function M.gen_header()
-  local ascii = config.opts.asciiart
   local left, right = M.comment_symbols()
   local fill_line = left .. " " .. string.rep("*", config.opts.length - #left - #right - 2) .. " " .. right
   local empty_line = M.gen_line("", "")
   local date = os.date "%Y/%m/%d %H:%M:%S"
+
+  local frame = { fill_line, empty_line }
+  frame[10], frame[11] = empty_line, fill_line
+  if M.has_header(frame) then
+    local existing = vim.api.nvim_buf_get_lines(0, 0, 11, false)
+    local function replace_text(line, text)
+      local content = line:sub(config.opts.margin + 1)
+      local old_text, suffix = content:match "^(.-)  +(.*)$"
+      if not old_text then
+        return line
+      end
+      local width = #content - #suffix
+      text = text:sub(1, width - 2)
+      return line:sub(1, config.opts.margin) .. text .. (" "):rep(width - #text) .. suffix
+    end
+    existing[4] = replace_text(existing[4], vim.fn.expand "%:t")
+    existing[9] = replace_text(existing[9], "Updated: " .. date .. " by " .. M.user())
+    return existing
+  end
+
+  local ascii = config.opts.asciiart
+  if type(ascii[1]) == "table" then
+    ascii = ascii[math.random(#ascii)]
+  end
 
   return {
     fill_line,
@@ -93,13 +117,19 @@ function M.has_header(header)
   local lines = vim.api.nvim_buf_get_lines(0, 0, 11, false)
 
   -- Immutable lines that are used for checking.
-  for _, v in pairs { 1, 2, 3, 10, 11 } do
+  for _, v in pairs { 1, 2, 10, 11 } do
     if header[v] ~= lines[v] then
       return false
     end
   end
 
-  return true
+  local prefix = config.opts.margin + 1
+  return lines[6] ~= nil
+    and lines[6]:sub(prefix, prefix + 3) == "By: "
+    and lines[8] ~= nil
+    and lines[8]:sub(prefix, prefix + 8) == "Created: "
+    and lines[9] ~= nil
+    and lines[9]:sub(prefix, prefix + 8) == "Updated: "
 end
 
 ---Insert a header into the current buffer.
