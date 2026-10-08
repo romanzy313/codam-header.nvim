@@ -90,7 +90,7 @@ return {
   user = "username",
   ---Default user.email.
   mail = "your@mail.com",
-  ---ASCII art: seven lines, or an array of seven-line designs.
+  ---ASCII art: single design, or an array of designs.
   --asciiart = { "---", "---", ... },
   ---Git config.
   git = {
@@ -106,7 +106,8 @@ return {
 }
 ```
 
-To choose randomly when inserting a new header, supply multiple designs:
+To choose randomly when inserting a new header, supply multiple designs. Here is
+some interesting ones:
 
 ```lua
 asciiart = {
@@ -156,13 +157,36 @@ asciiart = {
         "      CODAM ORBIT        ",
     },
     {
-        "⠊⢉⠆                      ",
-        "⠴⠥⠄                      ",
         "                         ",
-        "            en           ",
+        "       ⠊⢉⠆               ",
+        "       ⠴⠥⠄               ",
+        "           en            ",
+        "            ⡠⢺⠀⡎⠉⡆       ",
+        "            ⠉⠹⠁⠣⠤⠃       ",
         "                         ",
-        "                   ⡠⢺⠀⡎⠉⡆",
-        "                   ⠉⠹⠁⠣⠤⠃",
+    },
+    {
+        "   :::            ###",
+        ":::++++++         ###",
+        ":::::::::         ###",
+        ":::   ++++++      ###",
+        ":::      ###      ###",
+        ":::      ++++++   ###",
+        ":::         #########",
+        "::::::      ++++++###",
+        ":::+++         ######",
+        "   :::            ###",
+        "                     ",
+        "                     ",
+        "      +++++++++######",
+        "      ::::::###+++###",
+        ":::   +++++++++######",
+        "::::::      +++      ",
+        ":::++++++   :::      ",
+        "   ::::::++++++      ",
+        "      +++###+++      ",
+        "         +++###      ",
+        "            +++      ",
     },
 }
 ```

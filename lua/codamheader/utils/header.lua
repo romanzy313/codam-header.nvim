@@ -63,73 +63,86 @@ function M.gen_line(text, ascii)
     return left .. left_margin .. text .. spaces .. ascii .. right_margin .. right
 end
 
----Generate a complete header.
----@return table: A table ontaining all lines of header.
-function M.gen_header()
+local function frame_lines()
     local left, right = M.comment_symbols()
     local fill_line = left .. " " .. string.rep("*", config.opts.length - #left - #right - 2) .. " " .. right
-    local empty_line = M.gen_line("", "")
-    local date = os.date "%Y/%m/%d %H:%M:%S"
+    return fill_line, M.gen_line("", "")
+end
 
-    local frame = { fill_line, empty_line }
-    frame[10], frame[11] = empty_line, fill_line
-    if M.has_header(frame) then
-        local existing = vim.api.nvim_buf_get_lines(0, 0, 11, false)
-        local function replace_text(line, text)
-            local content = line:sub(config.opts.margin + 1)
-            local old_text, suffix = content:match "^(.-)  +(.*)$"
-            if not old_text then
-                return line
-            end
-            local width = #content - #suffix
-            text = text:sub(1, width - 2)
-            return line:sub(1, config.opts.margin) .. text .. (" "):rep(width - #text) .. suffix
-        end
-        existing[4] = replace_text(existing[4], vim.fn.expand "%:t")
-        existing[9] = replace_text(existing[9], "Updated: " .. date .. " by " .. M.user())
-        return existing
+-- Discover the existing header's height from its closing border, not the configured art.
+local function read_header()
+    local fill_line, empty_line = frame_lines()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 9, false)
+    local prefix = config.opts.margin + 1
+    if lines[1] ~= fill_line or lines[2] ~= empty_line
+        or not lines[6] or lines[6]:sub(prefix, prefix + 3) ~= "By: "
+        or not lines[8] or lines[8]:sub(prefix, prefix + 8) ~= "Created: "
+        or not lines[9] or lines[9]:sub(prefix, prefix + 8) ~= "Updated: " then
+        return nil
     end
+
+    local remaining = vim.api.nvim_buf_get_lines(0, 9, -1, false)
+    for _, line in ipairs(remaining) do
+        local previous = lines[#lines]
+        table.insert(lines, line)
+        if previous == empty_line and line == fill_line then
+            return lines
+        end
+    end
+end
+
+local function replace_text(line, text)
+    local content = line:sub(config.opts.margin + 1)
+    local old_text, suffix = content:match "^(.-)  +(.*)$"
+    if not old_text then
+        return line
+    end
+    local width = #content - #suffix
+    text = text:sub(1, width - 2)
+    return line:sub(1, config.opts.margin) .. text .. (" "):rep(width - #text) .. suffix
+end
+
+local function update_fields(header)
+    header[4] = replace_text(header[4], vim.fn.expand "%:t")
+    header[9] = replace_text(header[9], "Updated: " .. os.date "%Y/%m/%d %H:%M:%S" .. " by " .. M.user())
+    return header
+end
+
+---Generate a complete header, preserving any existing artwork.
+---@return table: A table containing all lines of the header.
+function M.gen_header()
+    local existing = read_header()
+    if existing then
+        return update_fields(existing)
+    end
+
+    local fill_line, empty_line = frame_lines()
+    local date = os.date "%Y/%m/%d %H:%M:%S"
 
     local ascii = config.opts.asciiart
     if type(ascii[1]) == "table" then
         ascii = ascii[math.random(#ascii)]
     end
 
-    return {
-        fill_line,
-        empty_line,
-        M.gen_line("", ascii[1]),
-        M.gen_line(vim.fn.expand "%:t", ascii[2]),
-        M.gen_line("", ascii[3]),
-        M.gen_line("By: " .. M.user() .. " <" .. M.email() .. ">", ascii[4]),
-        M.gen_line("", ascii[5]),
-        M.gen_line("Created: " .. date .. " by " .. M.user(), ascii[6]),
-        M.gen_line("Updated: " .. date .. " by " .. M.user(), ascii[7]),
-        empty_line,
-        fill_line,
+    local text = {
+        [2] = vim.fn.expand "%:t",
+        [4] = "By: " .. M.user() .. " <" .. M.email() .. ">",
+        [6] = "Created: " .. date .. " by " .. M.user(),
+        [7] = "Updated: " .. date .. " by " .. M.user(),
     }
+    local header = { fill_line, empty_line }
+    for i = 1, math.max(7, #ascii) do
+        table.insert(header, M.gen_line(text[i] or "", ascii[i] or ""))
+    end
+    table.insert(header, empty_line)
+    table.insert(header, fill_line)
+    return header
 end
 
 ---Checks if there is a valid header in the current buffer.
----@param header table: The header to compare with the contents of the existing buffer.
 ---@return boolean: `true` if the header exists, `false` otherwise.
-function M.has_header(header)
-    local lines = vim.api.nvim_buf_get_lines(0, 0, 11, false)
-
-    -- Immutable lines that are used for checking.
-    for _, v in pairs { 1, 2, 10, 11 } do
-        if header[v] ~= lines[v] then
-            return false
-        end
-    end
-
-    local prefix = config.opts.margin + 1
-    return lines[6] ~= nil
-        and lines[6]:sub(prefix, prefix + 3) == "By: "
-        and lines[8] ~= nil
-        and lines[8]:sub(prefix, prefix + 8) == "Created: "
-        and lines[9] ~= nil
-        and lines[9]:sub(prefix, prefix + 8) == "Updated: "
+function M.has_header()
+    return read_header() ~= nil
 end
 
 ---Insert a header into the current buffer.
@@ -147,26 +160,23 @@ function M.insert_header(header)
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
----Update an existing header in the current buffer.
----@param header table: Header to override the current one.
-function M.update_header(header)
-    local immutable = { 6, 8 }
-
-    -- Copies immutable lines from existing header to updated header.
-    for _, value in ipairs(immutable) do
-        header[value] = vim.api.nvim_buf_get_lines(0, value - 1, value, false)[1]
+---Update the filename and timestamp without replacing the existing artwork.
+function M.update_header()
+    local header = read_header()
+    if not header then
+        return
     end
-
-    vim.api.nvim_buf_set_lines(0, 0, 11, false, header)
+    update_fields(header)
+    vim.api.nvim_buf_set_lines(0, 3, 4, false, { header[4] })
+    vim.api.nvim_buf_set_lines(0, 8, 9, false, { header[9] })
 end
 
 ---Inserts or updates the header in the current buffer.
 function M.stdheader()
-    local header = M.gen_header()
-    if not M.has_header(header) then
-        M.insert_header(header)
+    if not M.has_header() then
+        M.insert_header(M.gen_header())
     else
-        M.update_header(header)
+        M.update_header()
     end
 end
 

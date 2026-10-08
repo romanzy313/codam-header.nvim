@@ -14,9 +14,8 @@ function M.setup(opts)
             nested = true,
             group = custom,
             callback = function()
-                local header = utils.gen_header()
-                if utils.has_header(header) then
-                    utils.update_header(header)
+                if utils.has_header() then
+                    utils.update_header()
                 end
             end,
         })

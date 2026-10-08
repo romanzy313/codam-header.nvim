@@ -96,14 +96,13 @@ local readme = file:read "*a"
 file:close()
 local examples = assert(loadstring("return " .. assert(readme:match "```lua\nasciiart = (%b{})")))()
 for index, art in ipairs(examples) do
-    assert(#art == 7)
-    for _, row in ipairs(art) do
-        assert(vim.fn.strdisplaywidth(row) == 25)
-    end
+    local size = math.max(7, #art) + 4
     config.set { asciiart = art }
     new_buffer("/tmp/readme-art-" .. index .. ".c")
     vim.cmd "Stdheader"
-    local before = vim.api.nvim_buf_get_lines(0, 0, 11, false)
+    local before = vim.api.nvim_buf_get_lines(0, 0, size, false)
+    assert(#before == size)
+    assert(vim.api.nvim_buf_line_count(0) == size + 2)
     for _, row in ipairs(before) do
         assert(vim.fn.strdisplaywidth(row) == 80)
     end
@@ -111,14 +110,89 @@ for index, art in ipairs(examples) do
     timestamp = "2026/10/08 15:00:00"
     vim.api.nvim_buf_set_name(0, "/tmp/readme-art-renamed-" .. index .. ".c")
     vim.api.nvim_exec_autocmds("BufWritePre", { buffer = 0 })
-    local after = vim.api.nvim_buf_get_lines(0, 0, 11, false)
+    local after = vim.api.nvim_buf_get_lines(0, 0, size, false)
+    assert(vim.api.nvim_buf_line_count(0) == size + 2)
     assert(after[4]:find("readme-art-renamed-" .. index .. ".c", 1, true))
     assert(after[9]:find(timestamp, 1, true))
-    for i = 1, 7 do
+    for i = 1, #art do
         assert(vim.fn.strdisplaywidth(after[i + 2]) == 80)
         assert(after[i + 2]:sub(- #art[i] - 5, -6) == art[i])
     end
 end
 
+local header = require "codamheader.utils.header"
+local function artwork(height)
+    local art = {}
+    for i = 1, height do
+        local row = string.format("row %04d ⠿", i)
+        art[i] = row .. (" "):rep(25 - vim.fn.strdisplaywidth(row))
+    end
+    return art
+end
+
+-- Exercise heights above and below the metadata height, with no upper cap.
+for _, height in ipairs { 0, 1, 3, 7, 8, 16, 1024 } do
+    local art = artwork(height)
+    timestamp = "2026/10/08 12:00:00"
+    config.set { asciiart = art }
+    new_buffer("/tmp/height-" .. height .. ".c")
+    vim.cmd "Stdheader"
+    local size = math.max(7, height) + 4
+    local before = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert(#before == size + 2)
+    assert(header.has_header())
+    for i = 1, height do
+        assert(before[i + 2]:sub(- #art[i] - 5, -6) == art[i])
+    end
+
+    -- Reload with a different configured height and keep every original line.
+    config.set { asciiart = { { "DIFFERENT DESIGN" } } }
+    new_buffer("/tmp/reopened-height-" .. height .. ".h")
+    vim.bo.filetype = "cpp"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, before)
+    timestamp = "2026/10/08 13:00:00"
+    local generated = header.gen_header()
+    assert(#generated == size)
+    vim.cmd "Stdheader"
+    timestamp = "2026/10/08 14:00:00"
+    vim.api.nvim_exec_autocmds("BufWritePre", { buffer = 0 })
+    -- Caller-supplied replacement art must also be ignored by the update helper.
+    header.update_header { "REPLACEMENT ART" }
+    local after = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert(#after == #before, "height changed during update")
+    assert(after[4]:find("reopened-height-" .. height .. ".h", 1, true))
+    assert(after[9]:find(timestamp, 1, true))
+    for i, row in ipairs(before) do
+        if i ~= 4 and i ~= 9 then
+            assert(after[i] == row, "artwork or source changed at line " .. i)
+        end
+    end
+    for i = 1, height do
+        assert(after[i + 2]:sub(- #art[i] - 5, -6) == art[i])
+    end
+    for i = 1, size do
+        assert(vim.fn.strdisplaywidth(after[i]) == 80)
+    end
+end
+
+-- A mixed-height pool chooses only at insertion; saves without headers choose nothing.
+config.set { asciiart = { artwork(2), artwork(32) } }
+local selections = 0
+math.random = function(count)
+    assert(count == 2)
+    selections = selections + 1
+    return 2
+end
+new_buffer "/tmp/mixed-heights.c"
+vim.api.nvim_exec_autocmds("BufWritePre", { buffer = 0 })
+assert(selections == 0)
+vim.cmd "Stdheader"
+assert(vim.api.nvim_buf_line_count(0) == 38)
+vim.cmd "Stdheader"
+vim.api.nvim_exec_autocmds("BufWritePre", { buffer = 0 })
+assert(selections == 1)
+assert(vim.api.nvim_buf_line_count(0) == 38)
+math.random = random
+
 os.date = date
-print "Passed: random artwork, removed designs, rename/save updates, single-design compatibility, and buffer options"
+print "Passed: unlimited artwork height, preservation, random selection, Unicode, metadata updates, and buffer options"
