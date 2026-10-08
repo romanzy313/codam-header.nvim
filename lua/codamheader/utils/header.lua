@@ -25,6 +25,10 @@ end
 ---Get left and right comment symbols from the buffer.
 ---@return string, string
 function M.comment_symbols()
+  if vim.bo.filetype == "c" or vim.fn.expand "%:e" == "h" then
+    return "/*", "*/"
+  end
+
   local str = vim.api.nvim_buf_get_option(0, "commentstring")
 
   -- Checks the buffer has a valid commentstring.
