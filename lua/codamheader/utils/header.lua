@@ -50,7 +50,7 @@ end
 ---@param ascii string: The ASCII art for the line.
 ---@return string: The formatted header line.
 function M.gen_line(text, ascii)
-    local max_length = config.opts.length - config.opts.margin * 2 - #ascii
+    local max_length = config.opts.length - config.opts.margin * 2 - vim.fn.strdisplaywidth(ascii)
 
     -- Keep a separator so text can be updated without knowing the artwork.
     text = (text):sub(1, ascii ~= "" and max_length - 2 or max_length)
